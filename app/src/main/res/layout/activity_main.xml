@@ -71,15 +71,20 @@
         app:layout_constraintTop_toBottomOf="@+id/divider2" />
 
     <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
-        android:layout_marginLeft="20dp"
+        android:id="@+id/textView"
+        android:layout_width="216dp"
+        android:layout_height="197dp"
         android:layout_marginTop="20dp"
-        android:text="Temp:"
+        android:gravity="center"
+        android:textColor="@color/colorPrimary"
+        android:textSize="150sp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/divider2"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.014"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/divider" />
+        app:layout_constraintTop_toBottomOf="@+id/divider"
+        app:layout_constraintVertical_bias="0.0"
+        tools:visibility="visible" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
