@@ -26,8 +26,13 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
+
+    private LatLng latandlng;
+    public JSONObject jsonWeather; // the json that represents weather for the given location
+
 
 
     @Override
@@ -43,77 +48,37 @@ public class MainActivity extends AppCompatActivity {
             @SuppressLint("StaticFieldLeak")
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                LatLng latandlng;  //(latitude, longitude)
+
                 if((event != null && (event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) ||
                         (actionId == EditorInfo.IME_ACTION_DONE)){
                     LatLng location = getLocationFromAddress(getApplicationContext(), editText.getText().toString());
                     if(location != null){
+                        temperatureText.setText("*");
                         latandlng = new LatLng(location.latitude, location.longitude);
                     }else{
-                        // Default Bergen
-                        location = getLocationFromAddress(getApplicationContext(), "Bergen");
-                        latandlng = new LatLng(location.latitude, location.longitude);
+                        temperatureText.setText("No");
+                        return true;
                     }
                     try{
-                        String from = String.format(Locale.US, "https://api.met.no/weatherapi/locationforecast/1.9/.json?lat=%f&lon=%f&msl=%d", latandlng.latitude, latandlng.longitude, 1);
-                        URL url = new URL(from);
 
-                        new AsyncTask<URL, Void, JSONObject>() {
-                            JSONObject weather;
-                            @Override
-                            protected JSONObject doInBackground(URL... urls) {
-                                URLConnection connection;
-                                BufferedReader reader;
-                                String line;
-                                StringBuilder responseContent = new StringBuilder();
-                                try{
-                                    URL url = urls[0];
-                                    connection = url.openConnection();
+                        getJson(latandlng); // gets json for current city(//TODO this works poorly)
 
-                                    //System.out.println(status);
-
-                                    reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                                    while((line = reader.readLine()) != null){
-                                        responseContent.append(line);
-                                    }
-                                    reader.close();
-
-                                    // System.out.println(responseContent.toString());
-                                    return new JSONObject(responseContent.toString());
-
-                                }catch(MalformedURLException e){
-                                    return null;
-                                }catch(IOException e){
-                                    return null;
-                                }catch (JSONException e){
-                                    return null;
-                                }
-                            }
-
-                            @Override
-                            protected void onPostExecute(JSONObject jsonData) {
-                                try{
-                                    weather = jsonData;
-
-                                    if(weather != null){
-                                        temperatureText.setText(weather.get("created").toString());
-                                    }else{
-                                        temperatureText.setText("*");
-                                    }
-                                }catch (JSONException e){
-                                    e.printStackTrace();
-                                }
-                            }
-
-                        }.execute(url);
-                    }catch (MalformedURLException e){
+                        if(jsonWeather != null){
+                            temperatureText.setText(jsonWeather.get("created").toString());
+                        }else{
+                            temperatureText.setText("Null");
+                        }
+                    }catch (JSONException e){
                         e.printStackTrace();
                     }
+
                 }
                 return false;
             }
         });
     }
+
+
 
     /**
      * return latitude and longitude of the given address(city name)
@@ -147,6 +112,63 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * This method needs to be called before anything can be done
+     * it fetches the current weather forecast from api.met.no
+     * @param latandlng
+     */
+    @SuppressLint("StaticFieldLeak")
+    public void getJson(final LatLng latandlng){
+        try{
+            String from = String.format(Locale.US, "https://api.met.no/weatherapi/locationforecast/1.9/.json?lat=%f&lon=%f", latandlng.latitude, latandlng.longitude);
+            URL url = new URL(from);
+
+            new AsyncTask<URL, Void, JSONObject>() {
+
+                @Override
+                protected JSONObject doInBackground(URL... urls) {
+                    URLConnection connection;
+                    BufferedReader reader;
+                    String line;
+                    StringBuilder responseContent = new StringBuilder();
+                    try{
+                        URL url = urls[0];
+                        connection = url.openConnection();
+
+
+                        reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                        while((line = reader.readLine()) != null){
+                            responseContent.append(line);
+                        }
+                        reader.close();
+
+                        return new JSONObject(responseContent.toString());
+
+                    }catch(MalformedURLException e){
+                        return null;
+                    }catch(IOException e){
+                        return null;
+                    }catch (JSONException e){
+                        return null;
+                    }
+                }
+
+                @Override
+                protected void onPostExecute(JSONObject jsonData) {
+                    if(jsonData == null){
+                        getJson(latandlng);
+                    }else{
+                        setJsonWeather(jsonData);
+                    }
+
+                }
+
+            }.execute(url);
+        }catch (MalformedURLException e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * return the current temperature outside from the given location in editText
      * @param json
      * @return
@@ -154,5 +176,13 @@ public class MainActivity extends AppCompatActivity {
     public String getCurrentTemp(JSONObject json){
         //TODO
         return null;
+    }
+
+    public void setJsonWeather(JSONObject jsonObject){
+        this.jsonWeather = jsonObject;
+    }
+
+    public JSONObject getJsonWeather(){
+        return this.jsonWeather;
     }
 }
