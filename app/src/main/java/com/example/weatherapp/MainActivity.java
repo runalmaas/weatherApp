@@ -6,6 +6,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
@@ -15,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -31,9 +33,10 @@ import java.util.concurrent.TimeUnit;
 public class MainActivity extends AppCompatActivity {
 
     private LatLng latandlng;
+
     public JSONObject jsonWeather; // the json that represents weather for the given location
 
-
+    TextView temperatureText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,44 +45,46 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         final EditText editText = findViewById(R.id.editText); //The edit field of the application
-        final TextView temperatureText = findViewById(R.id.textView); // text field that displays temperature
+        temperatureText = findViewById(R.id.textView); // text field that displays temperature
 
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @SuppressLint("StaticFieldLeak")
+            @SuppressLint({"StaticFieldLeak", "SetTextI18n"})
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 
                 if((event != null && (event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) ||
-                        (actionId == EditorInfo.IME_ACTION_DONE)){
+                        (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_NULL)){
                     LatLng location = getLocationFromAddress(getApplicationContext(), editText.getText().toString());
+
                     if(location != null){
                         temperatureText.setText("*");
                         latandlng = new LatLng(location.latitude, location.longitude);
                     }else{
-                        temperatureText.setText("No");
-                        return true;
-                    }
-                    try{
-
-                        getJson(latandlng); // gets json for current city(//TODO this works poorly)
-
-                        if(jsonWeather != null){
-                            temperatureText.setText(jsonWeather.get("created").toString());
-                        }else{
-                            temperatureText.setText("Null");
-                        }
-                    }catch (JSONException e){
-                        e.printStackTrace();
+                        temperatureText.setText("Not location");
                     }
 
+                    getJson(latandlng); // gets json for current city(//TODO this works poorly)
+                    
+                    return true;
                 }
                 return false;
             }
         });
     }
 
+    public void updateTextFields(TextView temperatureText){
 
-
+        if(getJsonWeather() != null){
+            try {
+                temperatureText.setText(getCurrentTemp(getJsonWeather()) + "°C");
+                setJsonWeather(null);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }else{
+            temperatureText.setText("Null");
+        }
+    }
     /**
      * return latitude and longitude of the given address(city name)
      * @param context
@@ -107,7 +112,6 @@ public class MainActivity extends AppCompatActivity {
 
             ex.printStackTrace();
         }
-
         return p1;
     }
 
@@ -134,7 +138,6 @@ public class MainActivity extends AppCompatActivity {
                         URL url = urls[0];
                         connection = url.openConnection();
 
-
                         reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                         while((line = reader.readLine()) != null){
                             responseContent.append(line);
@@ -158,8 +161,8 @@ public class MainActivity extends AppCompatActivity {
                         getJson(latandlng);
                     }else{
                         setJsonWeather(jsonData);
+                        updateTextFields(temperatureText);
                     }
-
                 }
 
             }.execute(url);
@@ -173,8 +176,17 @@ public class MainActivity extends AppCompatActivity {
      * @param json
      * @return
      */
-    public String getCurrentTemp(JSONObject json){
-        //TODO
+    public String getCurrentTemp(JSONObject json) throws JSONException {
+
+        JSONArray arr = (JSONArray) json.getJSONObject("product").getJSONArray("time");
+
+        for(int i = 0; i < arr.length(); i++){
+            if(arr.getJSONObject(i).getJSONObject("location").has("temperature")){
+                //TODO get weather at current time
+                return arr.getJSONObject(i).getJSONObject("location").getJSONObject("temperature").getString("value");
+            }
+        }
+
         return null;
     }
 
