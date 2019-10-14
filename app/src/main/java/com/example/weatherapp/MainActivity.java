@@ -61,10 +61,11 @@ public class MainActivity extends AppCompatActivity {
                         latandlng = new LatLng(location.latitude, location.longitude);
                     }else{
                         temperatureText.setText("Not location");
+                        return true;
                     }
 
                     getJson(latandlng); // gets json for current city(//TODO this works poorly)
-                    
+
                     return true;
                 }
                 return false;
@@ -84,6 +85,8 @@ public class MainActivity extends AppCompatActivity {
         }else{
             temperatureText.setText("Null");
         }
+
+        setJsonWeather(null);
     }
     /**
      * return latitude and longitude of the given address(city name)
