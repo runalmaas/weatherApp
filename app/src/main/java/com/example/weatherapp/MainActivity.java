@@ -1,17 +1,25 @@
 package com.example.weatherapp;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.text.Layout;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
+import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -28,6 +36,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
@@ -38,11 +47,36 @@ public class MainActivity extends AppCompatActivity {
 
     TextView temperatureText;
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+        getSupportActionBar().hide();
         setContentView(R.layout.activity_main);
+
+        //set cool background color(BLUE, ORANGE, GREEN etc.)
+        Random r = new Random();
+        int c = r.nextInt(3);
+
+        View root = findViewById(R.id.layout1).getRootView();
+
+        if(c == 0){
+            setTheme(R.style.AppThemeBlue);
+            root.setBackgroundColor(0xFF2196F3);
+            //Default statusbarcolor is blue
+        }
+        if(c == 1){
+            setTheme(R.style.AppThemeGreen);
+            root.setBackgroundColor(0xFF4CAF50);
+            getWindow().setStatusBarColor(getResources().getColor(R.color.green));
+        }
+        if(c == 2){
+            setTheme(R.style.AppThemeOrange);
+            root.setBackgroundColor(0xFFFF5722);
+            getWindow().setStatusBarColor(getResources().getColor(R.color.orange));
+        }
+
 
         final EditText editText = findViewById(R.id.editText); //The edit field of the application
         temperatureText = findViewById(R.id.textView); // text field that displays temperature
