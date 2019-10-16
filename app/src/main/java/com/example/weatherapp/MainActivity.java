@@ -1,22 +1,16 @@
 package com.example.weatherapp;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
-import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.Layout;
-import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
@@ -37,7 +31,6 @@ import java.net.URLConnection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -46,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
     public JSONObject jsonWeather; // the json that represents weather for the given location
 
     TextView temperatureText;
+    TextView latitude;
+    TextView longitude;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -54,32 +49,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         getSupportActionBar().hide();
         setContentView(R.layout.activity_main);
-
         //set cool background color(BLUE, ORANGE, GREEN etc.)
-        Random r = new Random();
-        int c = r.nextInt(3);
-
-        View root = findViewById(R.id.layout1).getRootView();
-
-        if(c == 0){
-            setTheme(R.style.AppThemeBlue);
-            root.setBackgroundColor(0xFF2196F3);
-            //Default statusbarcolor is blue
-        }
-        if(c == 1){
-            setTheme(R.style.AppThemeGreen);
-            root.setBackgroundColor(0xFF4CAF50);
-            getWindow().setStatusBarColor(getResources().getColor(R.color.green));
-        }
-        if(c == 2){
-            setTheme(R.style.AppThemeOrange);
-            root.setBackgroundColor(0xFFFF5722);
-            getWindow().setStatusBarColor(getResources().getColor(R.color.orange));
-        }
-
+        setRandomColor();
 
         final EditText editText = findViewById(R.id.editText); //The edit field of the application
         temperatureText = findViewById(R.id.textView); // text field that displays temperature
+        latitude = findViewById(R.id.Latitude); //Current latitude gets displayed here
+        longitude = findViewById(R.id.Longitude); //Current longitude gets displayed here
 
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @SuppressLint({"StaticFieldLeak", "SetTextI18n"})
@@ -91,15 +67,18 @@ public class MainActivity extends AppCompatActivity {
                     LatLng location = getLocationFromAddress(getApplicationContext(), editText.getText().toString());
 
                     if(location != null){
+                        temperatureText.setTextSize(125);
                         temperatureText.setText("*");
                         latandlng = new LatLng(location.latitude, location.longitude);
                     }else{
-                        temperatureText.setText("Not location");
+                        temperatureText.setTextSize(50);
+                        temperatureText.setText("Invalid location");
+                        latitude.setText("");
+                        longitude.setText("");
                         return true;
                     }
 
                     getJson(latandlng); // gets json for current city(//TODO this works poorly)
-
                     return true;
                 }
                 return false;
@@ -107,7 +86,31 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void updateTextFields(TextView temperatureText){
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void setRandomColor(){
+        Random r = new Random();
+        int c = r.nextInt(3);
+
+        View root = findViewById(R.id.layout1).getRootView();
+
+        if(c == 0){
+            setTheme(R.style.AppThemeBlue);
+            root.setBackgroundColor(0xFF2196F3);
+            //Default statusbar color is blue
+        }
+        if(c == 1){
+            setTheme(R.style.AppThemeGreen);
+            root.setBackgroundColor(0xFF4CAF50);
+            getWindow().setStatusBarColor(getResources().getColor(R.color.green));
+        }
+        if(c == 2){
+            setTheme(R.style.AppThemeOrange);
+            root.setBackgroundColor(0xFFFF5722);
+            getWindow().setStatusBarColor(getResources().getColor(R.color.orange));
+        }
+    }
+
+    private void updateCurrentTempTextField(TextView temperatureText){
 
         if(getJsonWeather() != null){
             try {
@@ -198,7 +201,9 @@ public class MainActivity extends AppCompatActivity {
                         getJson(latandlng);
                     }else{
                         setJsonWeather(jsonData);
-                        updateTextFields(temperatureText);
+                        updateCurrentTempTextField(temperatureText);
+                        latitude.setText("LAT: "+ round(latandlng.latitude, 4));
+                        longitude.setText("LNG: "+ round(latandlng.longitude, 4));
                     }
                 }
 
@@ -225,6 +230,21 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return null;
+    }
+
+    /**
+     * helper to round longitude and latitude to specifiv decimal point
+     * @param value
+     * @param places
+     * @return
+     */
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        long factor = (long) Math.pow(10, places);
+        value = value * factor;
+        long tmp = Math.round(value);
+        return (double) tmp / factor;
     }
 
     public void setJsonWeather(JSONObject jsonObject){
