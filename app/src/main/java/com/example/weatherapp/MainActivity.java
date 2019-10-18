@@ -28,9 +28,13 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+import us.dustinj.timezonemap.TimeZoneMap;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -41,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     TextView temperatureText;
     TextView latitude;
     TextView longitude;
+    TimeZoneMap timeMap;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -51,11 +56,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         //set cool background color(BLUE, ORANGE, GREEN etc.)
         setRandomColor();
+        // setup timezonemap in async task to make startup faster
+        setTimeZoneMap();
 
         final EditText editText = findViewById(R.id.editText); //The edit field of the application
         temperatureText = findViewById(R.id.textView); // text field that displays temperature
         latitude = findViewById(R.id.Latitude); //Current latitude gets displayed here
         longitude = findViewById(R.id.Longitude); //Current longitude gets displayed here
+
 
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @SuppressLint({"StaticFieldLeak", "SetTextI18n"})
@@ -156,6 +164,38 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * This takes some time to get
+     * @param latLng
+     * @return the local time at the given location
+     */
+    public String getTimeFromLocation(LatLng latLng){
+        Instant instant;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            instant = Instant.now();
+            ZoneId zoneId = ZoneId.of(timeMap.getOverlappingTimeZone(latLng.latitude, latLng.longitude).get().getZoneId());
+            ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, zoneId);
+            return zdt.toString();
+        }
+        return null;
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    private void setTimeZoneMap(){
+        new AsyncTask<Void, Void, TimeZoneMap>() {
+
+            @Override
+            protected TimeZoneMap doInBackground(Void... voids) {
+                TimeZoneMap timeMap = TimeZoneMap.forEverywhere();
+                return timeMap;
+            }
+
+            @Override
+            protected void onPostExecute(TimeZoneMap map) {
+                timeMap = map;
+            }
+        };
+    }
+    /**
      * This method needs to be called before anything can be done
      * it fetches the current weather forecast from api.met.no
      * @param latandlng
@@ -194,6 +234,7 @@ public class MainActivity extends AppCompatActivity {
                         return null;
                     }
                 }
+
 
                 @Override
                 protected void onPostExecute(JSONObject jsonData) {
