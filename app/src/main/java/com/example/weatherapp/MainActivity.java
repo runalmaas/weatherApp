@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
             protected void onPostExecute(TimeZoneMap map) {
                 timeMap = map;
             }
-        };
+        }.execute();
     }
     /**
      * This method needs to be called before anything can be done
