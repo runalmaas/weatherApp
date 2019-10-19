@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     TextView temperatureText;
     TextView latitude;
     TextView longitude;
+    TextView timeAndDate;
     TimeZoneMap timeMap;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -63,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
         temperatureText = findViewById(R.id.textView); // text field that displays temperature
         latitude = findViewById(R.id.Latitude); //Current latitude gets displayed here
         longitude = findViewById(R.id.Longitude); //Current longitude gets displayed here
+        timeAndDate = findViewById(R.id.timeAndDate); //displays current local time for given location
 
 
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -197,7 +199,8 @@ public class MainActivity extends AppCompatActivity {
     }
     /**
      * This method needs to be called before anything can be done
-     * it fetches the current weather forecast from api.met.no
+     * it fetches the current weather forecast from api.met.no and
+     * fills in textviews with relevant information
      * @param latandlng
      */
     @SuppressLint("StaticFieldLeak")
@@ -245,6 +248,7 @@ public class MainActivity extends AppCompatActivity {
                         updateCurrentTempTextField(temperatureText);
                         latitude.setText("LAT: "+ round(latandlng.latitude, 4));
                         longitude.setText("LNG: "+ round(latandlng.longitude, 4));
+                        timeAndDate.setText(getTimeFromLocation(latandlng));
                     }
                 }
 
@@ -255,9 +259,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * return the current temperature outside from the given location in editText
+     *
      * @param json
-     * @return
+     * @return the current temperature from the given location in editText
      */
     public String getCurrentTemp(JSONObject json) throws JSONException {
 
