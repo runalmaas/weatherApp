@@ -77,14 +77,15 @@ public class MainActivity extends AppCompatActivity {
                     LatLng location = getLocationFromAddress(getApplicationContext(), editText.getText().toString());
 
                     if(location != null){
-                        temperatureText.setTextSize(125);
-                        temperatureText.setText("*");
+                        temperatureText.setTextSize(50);
+                        temperatureText.setText("Loading");
                         latandlng = new LatLng(location.latitude, location.longitude);
                     }else{
                         temperatureText.setTextSize(50);
                         temperatureText.setText("Invalid location");
                         latitude.setText("");
                         longitude.setText("");
+                        timeAndDate.setText("");
                         return true;
                     }
 
@@ -246,6 +247,7 @@ public class MainActivity extends AppCompatActivity {
                     }else{
                         setJsonWeather(jsonData);
                         updateCurrentTempTextField(temperatureText);
+                        temperatureText.setTextSize(125);
                         latitude.setText("LAT: "+ round(latandlng.latitude, 4));
                         longitude.setText("LNG: "+ round(latandlng.longitude, 4));
                         timeAndDate.setText(getTimeFromLocation(latandlng));
